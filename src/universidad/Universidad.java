@@ -13,36 +13,46 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Set;
+import java.util.TreeSet;
+//JAVADOCS
+/**
+ * Clase principal que administra todo el sistema de la universidad.
+ * Guarda las listas de alumnos, asignaturas y cursos.
+ */
 public class Universidad implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private final List<Alumno> alumnos;
+    private final Set<Alumno> alumnos;
     private final List<Asignatura> asignaturas;
     private final List<Curso> cursos;
 
     public Universidad() {
-        alumnos = new ArrayList<>();
+        alumnos = new TreeSet<>();
         asignaturas = new ArrayList<>();
         cursos = new ArrayList<>();
     }
+    /**
+     * Agrega un nuevo alumno al sistema.
+     * @param a El objeto Alumno que se va a guardar.
+     * @throws DatoInvalidoException Si el alumno es nulo.
+     * @throws AlumnoDuplicadoException Si ya existe un alumno con esa matrícula.
+     */
     public void agregarAlumno(Alumno a) { // agrega al alumno de forma ordenada
         if (a == null) {
             throw new ParametroNuloException("El alumno a agregar no puede ser nulo.");
         }
-
-        int idx = 0;
-        while (idx < alumnos.size()) {
-            if (alumnos.get(idx).getMatricula().equalsIgnoreCase(a.getMatricula())) {
+        for (Alumno existente : alumnos) {
+            if (existente.getMatricula().equalsIgnoreCase(a.getMatricula())) {
                 throw new AlumnoDuplicadoException();
             }
-            if (alumnos.get(idx).compareTo(a) > 0) {
-                break; // encontramos la posición correcta
-            }
-            idx++;
         }
-        alumnos.add(idx, a);
+        alumnos.add(a);
     }
+    /**
+     * Guarda una nueva materia en el sistema.
+     * * @param a La asignatura que se quiere agregar.
+     */
     public void agregarAsignatura(Asignatura a) {
         boolean existe = false;
         int idx = 0;
@@ -60,6 +70,10 @@ public class Universidad implements Serializable {
         }
         asignaturas.add(a);
     }
+    /**
+     * Abre un nuevo curso o comisión en el sistema.
+     * * @param c El curso a guardar.
+     */
     public void agregarCurso(Curso c) {
         boolean existe = false;
         int idx = 0;
@@ -77,6 +91,12 @@ public class Universidad implements Serializable {
         }
         cursos.add(c);
     }
+    /**
+     * Registra la asistencia de un alumno en un día de clases específico.
+     * * @param alumno El estudiante al que se le toma asistencia.
+     * @param clase  El día y horario de la clase.
+     * @param curso  La comisión donde se dictó la clase.
+     */
     public void registrarAsistencia(Alumno alumno, Clase clase, Curso curso) {
         if (alumno == null || clase == null || curso == null) {
             throw new ParametroNuloException();
@@ -109,6 +129,11 @@ public class Universidad implements Serializable {
             throw new AlumnoNoInscriptoException("El alumno no está inscripto en este curso.");
         }
     }
+    /**
+     * Arma un listado con las materias ordenadas desde la que tiene mejor asistencia
+     * hasta la que tiene peor asistencia.
+     * * @return Una lista ordenada con el ranking de presentismo.
+     */
     public List<RankingAsignatura> rankingPresentismo() {
         List<RankingAsignatura> ranking;
         int totalAsistenciasPresentes, alumnosInscriptosEnCurso, totalClasesMaximasPosibles, clasesDictadasEnCurso;
@@ -137,6 +162,10 @@ public class Universidad implements Serializable {
         ranking.sort((x, y) -> Double.compare(y.getPorcentaje(), x.getPorcentaje()));
         return ranking;
     }
+    /**
+     * Imprime en la consola un informe detallado de todos los alumnos de un curso.
+     * * @param curso El curso del que se quiere ver el reporte.
+     */
     public void reporteAsignatura(Asignatura asignatura) {
         if (asignatura == null) {
             throw new ParametroNuloException("La asignatura no puede ser nula.");
@@ -175,6 +204,10 @@ public class Universidad implements Serializable {
             System.out.println("No hay cursos registrados para la asignatura: " + asignatura.getNombre());
         }
     }
+    /**
+     * Muestra en pantalla todos los alumnos que quedaron libres en un año específico.
+     * * @param anio El año que se quiere consultar (ejemplo: 2026).
+     */
     public void alumnosLibres() {
         for (Curso c : cursos) {
             for (Inscripcion i : c.getInscripciones()) {
