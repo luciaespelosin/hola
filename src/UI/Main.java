@@ -17,12 +17,9 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Punto de entrada del sistema de gestión universitaria.
@@ -40,9 +37,8 @@ import java.util.Scanner;
  */
 public class Main {
     private static Universidad universidad;
-    private static final String RUTA_XML_DEFAULT = "datos/universidad.xml";
-    private static final String RUTA_BIN_DEFAULT = "datos/universidad.dat";
-    private static final String RUTA_HTML = "AppWeb/index.html";
+    private static final String RUTA_XML_DEFAULT = "src/io/universidad.xml";
+    private static final String RUTA_BIN_DEFAULT = "src/io/universidad.dat";
 
     /**
      * Crea el sistema, intenta recuperar el estado guardado y presenta el menú.
@@ -51,30 +47,37 @@ public class Main {
      */
     static void main(String[] args) {
         try {
-            // Intentar recuperar el estado previo al iniciar
-            universidad = PersistenciaBinaria.cargarEstado(RUTA_BIN_DEFAULT);
+            universidad = PersistenciaBinaria.cargarEstado(RUTA_BIN_DEFAULT); // Intenta recuperar el estado previo al iniciar
             if (universidad == null) {
                 universidad = new Universidad();
             }
 
-            // Crear el servidor HTTP en el puerto 8080
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
 
-            // Handler para servir la página web principal
-            server.createContext("/", new HttpHandler() {
+            server.createContext("/", new HttpHandler() { // Handler para servir la página web principal
                 @Override
                 public void handle(HttpExchange exchange) throws IOException {
-                    byte[] response = Files.readAllBytes(Paths.get(RUTA_HTML));
-                    exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-                    exchange.sendResponseHeaders(200, response.length);
-                    OutputStream os = exchange.getResponseBody();
-                    os.write(response);
-                    os.close();
+                    try (InputStream is = Main.class.getResourceAsStream("/UI/AppWeb/index.html")) {
+                        if (is == null) {
+                            String errorMsg = "Error interno: No se encontró el archivo index.html en los recursos.";
+                            byte[] responseBytes = errorMsg.getBytes(StandardCharsets.UTF_8);
+                            exchange.sendResponseHeaders(404, responseBytes.length);
+                            try (OutputStream os = exchange.getResponseBody()) {
+                                os.write(responseBytes);
+                            }
+                            return;
+                        }
+
+                        byte[] response = is.readAllBytes();
+                        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+                        exchange.sendResponseHeaders(200, response.length);
+                        try (OutputStream os = exchange.getResponseBody()) {
+                            os.write(response);
+                        }
+                    }
                 }
             });
-
-            // Handler para procesar las acciones del menú
-            server.createContext("/accion", new HttpHandler() {
+            server.createContext("/accion", new HttpHandler() {// Handler para procesar las acciones del menú
                 @Override
                 public void handle(HttpExchange exchange) throws IOException {
                     if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -102,7 +105,6 @@ public class Main {
                                 resultado = "Error al cargar el estado binario.";
                             }
                         } else if ("5".equals(operacion)) {
-                            // Opción 5: Registrar asistencia manual
                             try {
                                 String idCurso = params.get("idCurso");
                                 String idClase = params.get("idClase");
@@ -140,7 +142,6 @@ public class Main {
                                 resultado = "[!] Error: " + e.getMessage();
                             }
                         } else if ("6".equals(operacion)) {
-                            // Opción 6: Ranking de presentismo
                             List<universidad.ranking.RankingAsignatura> ranking = universidad.rankingPresentismo();
                             if (ranking.isEmpty()) {
                                 resultado = "No hay datos suficientes para generar el ranking.";
@@ -158,7 +159,6 @@ public class Main {
                                 resultado = sb.toString();
                             }
                         } else if ("7".equals(operacion)) {
-                            // Opción 7: Reporte de asignatura
                             String codigo = params.get("codigo");
                             universidad.asignaturas.Asignatura encontrada = null;
                             for (universidad.asignaturas.Asignatura a : universidad.getAsignaturas()) {
@@ -186,7 +186,6 @@ public class Main {
                                 }
                             }
                         } else if ("8".equals(operacion)) {
-                            // Opción 8: Alumnos libres todas las asignaturas
                             List<universidad.inscripciones.Inscripcion> libres = universidad.alumnosLibres();
                             if (libres.isEmpty()) {
                                 resultado = "(No hay alumnos libres registrados)";
@@ -202,7 +201,6 @@ public class Main {
                                 resultado = sb.toString();
                             }
                         } else if ("9".equals(operacion)) {
-                            // Opción 9: Alumnos libres por año calendario
                             try {
                                 int anio = Integer.parseInt(params.get("codigo")); // Reutiliza el parámetro de texto de la UI
                                 List<universidad.inscripciones.Inscripcion> libres = universidad.alumnosLibres(anio);
@@ -223,7 +221,6 @@ public class Main {
                                 resultado = "[!] Ingrese un año válido en el cuadro de texto.";
                             }
                         }
-
                         // Responder al navegador
                         exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=UTF-8");
                         byte[] responseBytes = resultado.getBytes(StandardCharsets.UTF_8);
@@ -244,7 +241,13 @@ public class Main {
             System.err.println("Error al iniciar el servidor de UI: " + e.getMessage());
         }
     }
-
+    /**
+     * Procesa y parsea el cuerpo de una solicitud HTTP POST codificada en formato
+     * application/x-www-form-urlencoded, convirtiéndola en un mapa de clave-valor.
+     * * @param is El flujo de entrada conteniendo los bytes del cuerpo del POST.
+     * @return Un mapa {@link Map} con los parámetros y sus respectivos valores decodificados.
+     * @throws IOException Si ocurre un error de lectura en el flujo de datos.
+     */
     private static Map<String, String> parsearPostParams(InputStream is) throws IOException {
         Map<String, String> result = new HashMap<>();
         String query = new String(is.readAllBytes(), StandardCharsets.UTF_8);
