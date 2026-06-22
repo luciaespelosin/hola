@@ -9,10 +9,10 @@ import universidad.excepciones.*;
 public abstract class Asignatura implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private String codigo;
-    private String nombre;
-    private int cuatrimestre;
-    private boolean promocional;
+    private final String codigo;
+    private final String nombre;
+    private final int cuatrimestre;
+    private final boolean promocional;
     /**
      * Crea una nueva materia con sus reglas de aprobación.
      * @param codigo       El código único de la materia.
@@ -21,12 +21,12 @@ public abstract class Asignatura implements Serializable {
      * @param promocional  Verdadero si la materia se puede promocionar, falso si no.
      */
     public Asignatura(String codigo, String nombre, int cuatrimestre, boolean promocional) {
-        if (cuatrimestre < 1 || cuatrimestre > 10) {
-            throw new DatoInvalidoException("Cuatrimestre inválido");
-        } else if (codigo == null || codigo.isBlank()) {
+        if (codigo == null || codigo.isBlank()) {
             throw new ParametroNuloException("El código de la asignatura no puede estar vacío");
         } else if (nombre == null || nombre.isBlank()) {
             throw new ParametroNuloException("El nombre de la asignatura no puede estar vacío");
+        } else if (cuatrimestre < 1 || cuatrimestre > 10) {
+            throw new DatoInvalidoException("Cuatrimestre inválido: debe estar entre 1 y 10");
         }
         this.codigo = codigo;
         this.nombre = nombre;
@@ -36,35 +36,15 @@ public abstract class Asignatura implements Serializable {
     public String getCodigo() {
         return codigo;
     }
-    public void setCodigo(String codigo) {
-        if (codigo == null || codigo.isBlank()) {
-            throw new ParametroNuloException("El código no puede estar vacío");
-        }
-        this.codigo = codigo;
-    }
+    public abstract String getCodigoTipo(); // Identificador tecnico para el xml
     public String getNombre() {
         return nombre;
-    }
-    public void setNombre(String nombre) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new ParametroNuloException("El nombre no puede estar vacío");
-        }
-        this.nombre = nombre;
     }
     public int getCuatrimestre() {
         return cuatrimestre;
     }
-    public void setCuatrimestre(int cuatrimestre) {
-        if (cuatrimestre < 1 || cuatrimestre > 10) {
-            throw new DatoInvalidoException("Cuatrimestre inválido");
-        }
-        this.cuatrimestre = cuatrimestre;
-    }
     public boolean isPromocional() {
         return promocional;
-    }
-    public void setPromocional(boolean promocional) {
-        this.promocional = promocional;
     }
     @Override
     public String toString() {

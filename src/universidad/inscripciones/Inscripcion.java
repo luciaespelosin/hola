@@ -3,6 +3,9 @@ package universidad.inscripciones;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.io.Serial;
+import java.util.Collections;
+import java.util.List;
+
 import universidad.alumnos.Alumno;
 import universidad.alumnos.CondicionAlumno; 
 import universidad.asignaturas.Asignatura;
@@ -19,7 +22,6 @@ public class Inscripcion implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    // son final porque, como se asignan una sola vez en el constructor y nunca cambia, protege la seguridad y blabla
     private final Alumno alumno;
     private final Curso curso;
     private final ModalidadCursada modalidad;
@@ -35,7 +37,7 @@ public class Inscripcion implements Serializable {
             throw new ParametroNuloException();
         }else {
             this.alumno = alumno;
-            this.curso = curso; // Guardamos la referencia al curso
+            this.curso = curso;
             this.modalidad = modalidad;
             this.asistencias = new ArrayList<>();
         }
@@ -114,5 +116,7 @@ public class Inscripcion implements Serializable {
     public ModalidadCursada getModalidad() { return modalidad; }
     public Asignatura getAsignatura() { return curso.getAsignatura(); }
     public Curso getCurso() { return curso; }
-    public ArrayList<Asistencia> getAsistencias() { return asistencias; }
+    public List<Asistencia> getAsistencias() {
+        return Collections.unmodifiableList(asistencias);
+    }
 }
