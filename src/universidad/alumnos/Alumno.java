@@ -9,10 +9,10 @@ import universidad.excepciones.*;
 public class Alumno implements Comparable<Alumno>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private String matricula;
-    private String apellido;
-    private String nombre;
-    private LocalDate fechaNacimiento;
+    private final String matricula;
+    private final String apellido;
+    private final String nombre;
+    private final LocalDate fechaNacimiento;
     /**
      * Registra un nuevo alumno.
      * @param matricula El DNI o número de legajo único del alumno.
@@ -38,43 +38,16 @@ public class Alumno implements Comparable<Alumno>, Serializable {
     public String getMatricula() { 
         return matricula; 
     }
-    public void setMatricula(String matricula) { 
-        if (matricula == null || matricula.isBlank()) {
-            throw new ParametroNuloException("La matrícula no puede estar vacía");
-        }else {
-            this.matricula = matricula;
-        }
-    }
     public String getApellido() { 
         return apellido; 
-    }
-    public void setApellido(String apellido) { 
-        if (apellido == null || apellido.isBlank()) {
-            throw new ParametroNuloException("El apellido no puede estar vacío");
-        } else {
-            this.apellido = apellido;
-        }
     }
     public String getNombre() { 
         return nombre; 
     }
-    public void setNombre(String nombre) { 
-        if (nombre == null || nombre.isBlank()) {
-            throw new ParametroNuloException("El nombre no puede estar vacío");
-        } else {
-            this.nombre = nombre;
-        }
-    }
     public LocalDate getFechaNacimiento() { 
         return fechaNacimiento; 
     }
-    public void setFechaNacimiento(LocalDate fechaNacimiento) { 
-        if (fechaNacimiento == null) {
-            throw new ParametroNuloException("La fecha de nacimiento no puede ser nula");
-        } else {
-            this.fechaNacimiento = fechaNacimiento;
-        }
-    }
+
     @Override
     public int compareTo(Alumno otro) {
         int comp = this.apellido.compareToIgnoreCase(otro.apellido);
